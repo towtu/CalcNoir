@@ -1,0 +1,5 @@
+# Raised tab selection — 2026-11-14
+
+User supplied a liquid-navbar reference and requests a selected item that rises into a circle. Adapt the interaction to native React Native and the existing monochrome brand: selected icon in contrasting 48dp circle with a background-colored rim, lifted above its normal baseline. Keep Methods, Notebook, Learn, Settings text labels visible, the default tab semantics and navigation, and at least 48dp press targets. Native Animated transforms only, short ease-out transition, cleanup, no movement with reduced motion. No animation dependency or CSS/WebView layer.
+
+Final user reference: circle sits inside a moving top-edge cutout with visible gap. Use a 40dp circle, 56dp background cutout, black bar in light mode and gray in dark mode. All tab labels remain visible. One native transform moves the circle/cutout; the displayed icon changes only after arrival. Interrupted completions are ignored. Actual tab press targets remain at least 48dp and include the raised region. Android emulator animation scales were found at zero and restored to one only in the owned test AVD, with previous values recorded under artifacts/redesign.

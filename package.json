@@ -1,0 +1,66 @@
+{
+  "name": "calcnoir",
+  "version": "1.0.0",
+  "private": true,
+  "codegenConfig": {
+    "name": "CalcNoirNotebookSpec",
+    "type": "modules",
+    "jsSrcsDir": "src/native/specs",
+    "android": {
+      "javaPackageName": "com.towtu.almostexact"
+    }
+  },
+  "scripts": {
+    "android": "bash scripts/android-dev.sh",
+    "ios": "react-native run-ios",
+    "lint": "eslint App.tsx src __tests__ --max-warnings 0",
+    "start": "react-native start --host 127.0.0.1",
+    "test": "jest",
+    "typecheck": "tsc --noEmit --incremental false",
+    "check": "npm run typecheck && npm run lint && npm test -- --runInBand",
+    "android:apk": "bash scripts/android-build.sh apk",
+    "android:aab": "bash scripts/android-build.sh aab",
+    "android:artifacts": "bash scripts/android-build.sh all"
+  },
+  "dependencies": {
+    "@react-native-async-storage/async-storage": "^3.1.1",
+    "@react-navigation/bottom-tabs": "^7.21.0",
+    "@react-navigation/native": "^7.5.1",
+    "@react-navigation/native-stack": "^7.21.0",
+    "mathjs": "^15.2.0",
+    "react": "19.3.0",
+    "react-native": "0.88.1",
+    "react-native-safe-area-context": "^5.5.2",
+    "react-native-screens": "^4.30.0",
+    "react-native-svg": "^15.16.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@babel/preset-env": "^7.25.3",
+    "@babel/runtime": "^7.25.0",
+    "@react-native-community/cli": "20.2.0",
+    "@react-native-community/cli-platform-android": "20.2.0",
+    "@react-native-community/cli-platform-ios": "20.2.0",
+    "@react-native/babel-preset": "0.88.1",
+    "@react-native/eslint-config": "0.88.1",
+    "@react-native/jest-preset": "0.88.1",
+    "@react-native/metro-config": "0.88.1",
+    "@react-native/typescript-config": "0.88.1",
+    "@types/jest": "^29.5.13",
+    "@types/react": "^19.2.0",
+    "@types/react-test-renderer": "^19.1.0",
+    "eslint": "^8.19.0",
+    "jest": "^29.6.3",
+    "prettier": "2.8.8",
+    "react-test-renderer": "19.3.0",
+    "typescript": "^6.0.3"
+  },
+  "engines": {
+    "node": "^22.13.0 || ^24.3.0 || >=26.0.0"
+  },
+  "overrides": {
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "11.0.1"
+    }
+  }
+}

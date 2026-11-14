@@ -1,0 +1,36 @@
+{
+  "date": "2026-11-13",
+  "native_build": {
+    "unit": "calcnoir-android-33999-134999f5.scope",
+    "exit_code": 0,
+    "reason": "command exited",
+    "duration_seconds": 192.1,
+    "sampled_peak_mib": 3207.7,
+    "ram_limit_mib": 4608
+  },
+  "native_build_result": "BUILD SUCCESSFUL in 3m 11s; 144 actionable tasks",
+  "final_configuration_build": "BUILD SUCCESSFUL in 14s; 144 actionable tasks",
+  "app_checks": "typecheck and lint passed; 122 tests in 6 suites passed",
+  "safeguard_checks": "7 resource checks and 1 shell launch-order regression passed; original launcher fails order check",
+  "deployment": {
+    "unit": "calcnoir-android-92536-e2eb5af5.scope",
+    "exit_code": 0,
+    "reason": "command exited",
+    "duration_seconds": 127.1,
+    "sampled_peak_mib": 4098.9,
+    "ram_limit_mib": 4608
+  },
+  "deployment_result": "Streamed Install Success; MAIN activity start returned exit code 0; Metro was not started for this system test",
+  "emulator_scope_kernel_values": {
+    "memory.max": "4831838208",
+    "memory.peak": "4298551296",
+    "memory.events": "low 0\nhigh 765\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+    "cpu.max": "400000 100000",
+    "memory.swap.max": "268435456"
+  },
+  "window_rule": "Emulator class; floating true; main window 320x640; Hyprland configerrors empty",
+  "scope": "Resource scripts cover this calcnoir checkout; emulator window rules cover all projects",
+  "root_cause": "unproven: prior journal ended abruptly without recorded host OOM/panic/GPU/storage fault",
+  "kernel_sample_source": "Read from this deployment scope while active, before it exited; final cleanup found it already gone.",
+  "test_cleanup": "No active owned test emulator scope remained at cleanup; no user apps terminated."
+}
