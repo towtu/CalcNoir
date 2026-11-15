@@ -104,6 +104,11 @@ export function ComparisonScreen({
                     <Text style={[styles.small, { color: colors.muted }]}>
                       {item.calculation.steps.length} steps ·{' '}
                       {item.calculation.functionEvaluations} evaluations
+                      {item.calculation.observedOrder === null
+                        ? ''
+                        : ` · order p ≈ ${item.calculation.observedOrder.toFixed(
+                            2,
+                          )}`}
                     </Text>
                   </View>
                   <Text

@@ -1,6 +1,14 @@
+import { estimateErrorConstant, estimateOrder } from './convergence';
 import { compileExpression } from './expression';
 import { domainFor, sampleCurve } from './plot';
-import type { Calculation, CalculationStep, Point, RootProblem } from './types';
+import type {
+  Calculation,
+  CalculationStep,
+  Diagnosis,
+  Point,
+  RootMethod,
+  RootProblem,
+} from './types';
 
 const COLUMNS = {
   bisection: ['n', 'a', 'b', 'Midpoint', 'f(midpoint)', 'Half-width'],
@@ -9,9 +17,31 @@ const COLUMNS = {
   'fixed-point': ['n', 'x', 'g(x)', 'f(g(x))', '|Δx|'],
 };
 
+/**
+ * Evaluations the iteration formula itself charges per step. This is the cost
+ * used for an efficiency index; it deliberately excludes this app's extra
+ * convergence verification, which is a product choice rather than part of the
+ * method.
+ */
+const EVALUATIONS_PER_ITERATION: Record<RootMethod, number> = {
+  bisection: 1,
+  newton: 2,
+  secant: 1,
+  'fixed-point': 1,
+};
+
+/** An error that also names the numerical cause for the result. */
+class SolverError extends Error {
+  readonly diagnosis: Diagnosis;
+  constructor(diagnosis: Diagnosis, message: string) {
+    super(message);
+    this.diagnosis = diagnosis;
+  }
+}
+
 function checked(value: number, message: string): number {
   if (!Number.isFinite(value)) {
-    throw new Error(message);
+    throw new SolverError('overflow', message);
   }
   return value;
 }
@@ -43,10 +73,27 @@ export function calculateRoot(problem: RootProblem): Calculation {
     xDomain: [-2, 2],
     plotKind: mapping ? 'mapping' : 'function',
     functionEvaluations: 0,
+    errors: [],
+    residuals: [],
+    observedOrder: null,
+    errorConstant: null,
+    evaluationsPerIteration: EVALUATIONS_PER_ITERATION[problem.method],
+    diagnosis: 'invalid-input',
   };
   const remember = (x: number, fx: number): void => {
     result.value = x;
     result.residual = Math.abs(fx);
+  };
+  /**
+   * Record the movement and residual this iteration produced. Both are kept
+   * together so the two sequences stay index-aligned for later measurement.
+   */
+  const track = (movement: number, fx: number): void => {
+    if (!Number.isFinite(movement) || !Number.isFinite(fx)) {
+      return;
+    }
+    result.errors.push(Math.abs(movement));
+    result.residuals.push(Math.abs(fx));
   };
   const exact = (
     x: number,
@@ -75,6 +122,7 @@ export function calculateRoot(problem: RootProblem): Calculation {
         : {}),
     });
     result.status = 'converged';
+    result.diagnosis = 'exact-root';
     result.message = 'An exact root was found in the supplied inputs.';
     return true;
   };
@@ -90,11 +138,13 @@ export function calculateRoot(problem: RootProblem): Calculation {
       residualSatisfied(x));
   const success = (): void => {
     result.status = 'converged';
+    result.diagnosis = 'converged';
     result.message =
       'The estimate and equation residual satisfy the convergence checks.';
   };
   const limit = (): void => {
-    throw new Error(
+    throw new SolverError(
+      'max-iterations',
       'The iteration limit was reached before convergence. Increase the limit or choose different inputs.',
     );
   };
@@ -109,7 +159,8 @@ export function calculateRoot(problem: RootProblem): Calculation {
         if (!exact(b, fb, [1, a, b, b, fb, 0])) {
           remember(a, fa);
           if (a === b || Math.sign(fa) === Math.sign(fb)) {
-            throw new Error(
+            throw new SolverError(
+              'no-sign-change',
               'Bisection needs distinct bracket endpoints with opposite function signs.',
             );
           }
@@ -118,6 +169,7 @@ export function calculateRoot(problem: RootProblem): Calculation {
             const fm = f(midpoint);
             const halfWidth = Math.abs(b / 2 - a / 2);
             remember(midpoint, fm);
+            track(halfWidth, fm);
             result.steps.push({
               index,
               formula: 'm = (a + b) / 2; keep the half with opposite signs',
@@ -136,7 +188,8 @@ export function calculateRoot(problem: RootProblem): Calculation {
               break;
             }
             if (midpoint === a || midpoint === b) {
-              throw new Error(
+              throw new SolverError(
+                'stalled-at-precision',
                 'The bracket cannot shrink further at machine precision, but the residual is not converged. The bracket may contain a discontinuity.',
               );
             }
@@ -162,7 +215,8 @@ export function calculateRoot(problem: RootProblem): Calculation {
           evaluations += 1;
           const slope = derivative(x);
           if (slope === 0) {
-            throw new Error(
+            throw new SolverError(
+              'derivative-vanished',
               'Newton–Raphson stopped because the derivative is zero. Choose another starting guess.',
             );
           }
@@ -174,6 +228,11 @@ export function calculateRoot(problem: RootProblem): Calculation {
           const acceptCurrent = converged(x, fx, movement);
           const nextF = acceptCurrent ? fx : f(next);
           remember(acceptCurrent ? x : next, nextF);
+          // A retained estimate means the predicted step was not taken, so
+          // recording it would describe an iteration that never happened.
+          if (!acceptCurrent) {
+            track(movement, nextF);
+          }
           result.steps.push({
             index,
             formula: 'xₙ₊₁ = xₙ − f(xₙ) / f′(xₙ)',
@@ -199,7 +258,8 @@ export function calculateRoot(problem: RootProblem): Calculation {
             break;
           }
           if (next === x) {
-            throw new Error(
+            throw new SolverError(
+              'stalled-at-precision',
               'Newton–Raphson stagnated at machine precision without a small enough residual.',
             );
           }
@@ -233,7 +293,8 @@ export function calculateRoot(problem: RootProblem): Calculation {
             const valueScale = Math.max(Math.abs(previousF), Math.abs(fx));
             const denominator = fx / valueScale - previousF / valueScale;
             if (denominator === 0 || previous === x) {
-              throw new Error(
+              throw new SolverError(
+                'slope-undefined',
                 'Secant stopped because its slope denominator is zero. Choose two different guesses with different function values.',
               );
             }
@@ -249,6 +310,10 @@ export function calculateRoot(problem: RootProblem): Calculation {
             const acceptCurrent = converged(x, fx, movement);
             const nextF = acceptCurrent ? fx : f(next);
             remember(acceptCurrent ? x : next, nextF);
+            // See the Newton branch: a retained estimate is not an iteration.
+            if (!acceptCurrent) {
+              track(movement, nextF);
+            }
             result.steps.push({
               index,
               formula: 'xₙ₊₁ = xₙ − f(xₙ)(xₙ − xₙ₋₁) / (f(xₙ) − f(xₙ₋₁))',
@@ -275,7 +340,8 @@ export function calculateRoot(problem: RootProblem): Calculation {
               break;
             }
             if (next === x) {
-              throw new Error(
+              throw new SolverError(
+                'stalled-at-precision',
                 'Secant stagnated at machine precision without a small enough residual.',
               );
             }
@@ -297,7 +363,8 @@ export function calculateRoot(problem: RootProblem): Calculation {
         fx === 0 &&
         Math.abs(g(x) - x) / Math.max(1, Math.abs(x)) > problem.tolerance
       ) {
-        throw new Error(
+        throw new SolverError(
+          'mapping-not-fixed',
           'The initial value solves f(x), but the supplied mapping does not keep it fixed. Supply an equivalent g(x).',
         );
       }
@@ -307,6 +374,7 @@ export function calculateRoot(problem: RootProblem): Calculation {
           const nextF = f(next);
           const movement = Math.abs(next - x);
           remember(next, nextF);
+          track(movement, nextF);
           result.steps.push({
             index,
             formula: 'xₙ₊₁ = g(xₙ); verify f(xₙ₊₁) → 0',
@@ -327,7 +395,8 @@ export function calculateRoot(problem: RootProblem): Calculation {
             ],
           });
           if (next === x && nextF !== 0) {
-            throw new Error(
+            throw new SolverError(
+              'mapping-not-fixed',
               'The mapping stagnated at a fixed point that does not solve the original equation. Supply an equivalent g(x).',
             );
           }
@@ -340,7 +409,8 @@ export function calculateRoot(problem: RootProblem): Calculation {
             break;
           }
           if (next === x) {
-            throw new Error(
+            throw new SolverError(
+              'mapping-not-fixed',
               'The mapping stagnated at a fixed point that does not solve the original equation. Supply an equivalent g(x).',
             );
           }
@@ -353,6 +423,8 @@ export function calculateRoot(problem: RootProblem): Calculation {
     }
   } catch (error) {
     result.status = 'failed';
+    result.diagnosis =
+      error instanceof SolverError ? error.diagnosis : 'invalid-input';
     result.message =
       error instanceof Error
         ? error.message
@@ -374,5 +446,10 @@ export function calculateRoot(problem: RootProblem): Calculation {
     result.xDomain,
   );
   result.functionEvaluations = evaluations;
+  result.observedOrder = estimateOrder(result.errors);
+  result.errorConstant = estimateErrorConstant(
+    result.errors,
+    result.observedOrder,
+  );
   return result;
 }
