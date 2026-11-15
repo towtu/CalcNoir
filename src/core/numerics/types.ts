@@ -40,6 +40,23 @@ export interface CalculationStep {
   interval?: [number, number];
   contribution?: CurvePoint[];
 }
+/**
+ * Why a calculation stopped. `status` reports success or failure; `diagnosis`
+ * names the specific numerical cause so screens can explain it rather than
+ * showing one generic failure message.
+ */
+export type Diagnosis =
+  | 'converged'
+  | 'exact-root'
+  | 'max-iterations'
+  | 'stalled-at-precision'
+  | 'derivative-vanished'
+  | 'slope-undefined'
+  | 'no-sign-change'
+  | 'mapping-not-fixed'
+  | 'overflow'
+  | 'invalid-input';
+
 export interface Calculation {
   problem: Problem;
   status: 'converged' | 'calculated' | 'failed';
@@ -52,4 +69,15 @@ export interface Calculation {
   xDomain: [number, number];
   plotKind: 'function' | 'mapping' | 'polynomial';
   functionEvaluations: number;
+  /** Recorded |x(n) - x(n-1)| per accepted iteration, oldest first. */
+  errors: number[];
+  /** Recorded |f(x(n))| per accepted iteration, oldest first. */
+  residuals: number[];
+  /** Measured order of convergence, or null when unmeasurable. */
+  observedOrder: number | null;
+  /** Measured asymptotic error constant, or null when unmeasurable. */
+  errorConstant: number | null;
+  /** Function evaluations charged per accepted iteration. */
+  evaluationsPerIteration: number | null;
+  diagnosis: Diagnosis;
 }

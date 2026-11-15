@@ -147,6 +147,14 @@ export function calculateInterpolation(
     xDomain: domainFor([...points.map(point => point.x), targetX]),
     plotKind: 'polynomial',
     functionEvaluations: 0,
+    // Interpolation evaluates a closed form rather than iterating, so there is
+    // no error sequence and no order of convergence to measure.
+    errors: [],
+    residuals: [],
+    observedOrder: null,
+    errorConstant: null,
+    evaluationsPerIteration: null,
+    diagnosis: 'invalid-input',
   };
   try {
     if (problem.method === 'newton-divided') {
@@ -267,10 +275,12 @@ export function calculateInterpolation(
       });
     }
     result.status = 'calculated';
+    result.diagnosis = 'converged';
     result.message =
       'The unique polynomial through the supplied points was evaluated at the target. Extrapolation and tightly spaced nodes can amplify rounding error.';
   } catch (error) {
     result.status = 'failed';
+    result.diagnosis = 'invalid-input';
     result.value = null;
     result.message =
       error instanceof Error
