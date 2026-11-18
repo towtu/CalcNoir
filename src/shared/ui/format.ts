@@ -39,7 +39,7 @@ export function calculationReport(value: Calculation): string {
       step.cells.map(cell => (cell === null ? '' : String(cell))).join(','),
     ),
   ].join('\n');
-  return `CalcNoir — ${problem.method}\n${input}\nDisplay precision: ${
+  return `Numelix — ${problem.method}\n${input}\nDisplay precision: ${
     problem.precision
   }\n\nStatus: ${value.status}\nResult: ${formatNumber(
     value.value,

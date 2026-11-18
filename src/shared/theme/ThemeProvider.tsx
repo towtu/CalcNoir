@@ -7,44 +7,66 @@ import React, {
   useState,
 } from 'react';
 
+/**
+ * Numelix palette — 60 / 30 / 10.
+ *
+ * 60  neutral: brand black #141414 and off-white #F4F4F4 carry every reading
+ *     surface, so equations and step tables stay the most legible thing on
+ *     screen.
+ * 30  violet #983FFF: primary actions, the tab bar, active and selected state.
+ * 10  blue #45C4FC: accents only, and they have to be legible as accents.
+ *     In practice that means the things that point somewhere or report
+ *     something rather than the things you press: row chevrons, the "Resume"
+ *     link, the method chip on a saved page, progress fills, focus rings and
+ *     the selected step. Violet keeps the surfaces you act on — the tab bar,
+ *     method tiles, card icons, selected filters — so the two never carry the
+ *     same job on one screen.
+ *
+ * Both brand hexes are used literally on the theme where they are legible and
+ * tuned on the other one. #45C4FC scores 1.99:1 on white (it is used for graph
+ * strokes and legend text, so that fails), and #983FFF scores 3.94:1 on
+ * #141414. The variants below keep the same hue family above 4.5:1.
+ */
 const light = {
   background: '#FFFFFF',
   surface: '#FFFFFF',
-  surfaceAlt: '#F5F5F5',
-  text: '#111111',
-  muted: '#595959',
-  border: '#D1D1D1',
-  inputBorder: '#888888',
-  primary: '#111111',
-  accent: '#111111',
-  primarySoft: '#ECECEC',
+  surfaceAlt: '#F4F4F4',
+  text: '#141414',
+  muted: '#5C5C5C',
+  border: '#E4E4E4',
+  inputBorder: '#8A8A8A',
+  primary: '#983FFF',
+  accent: '#0A6E9E',
+  primarySoft: '#F2E7FF',
+  accentSoft: '#E2F1FA',
   onPrimary: '#FFFFFF',
-  secondary: '#333333',
-  secondarySoft: '#ECECEC',
+  secondary: '#57129E',
+  secondarySoft: '#EFE4FF',
   warning: '#333333',
   warningSoft: '#F1F1F1',
-  danger: '#111111',
-  dangerSoft: '#ECECEC',
+  danger: '#B42318',
+  dangerSoft: '#FDECEA',
 };
 export type ThemeColors = { [K in keyof typeof light]: string };
 const dark: ThemeColors = {
-  background: '#101010',
-  surface: '#181818',
-  surfaceAlt: '#242424',
-  text: '#FAFAFA',
-  muted: '#B8B8B8',
-  border: '#555555',
-  inputBorder: '#888888',
-  primary: '#FAFAFA',
-  accent: '#FAFAFA',
-  primarySoft: '#333333',
-  onPrimary: '#111111',
-  secondary: '#E0E0E0',
-  secondarySoft: '#303030',
+  background: '#141414',
+  surface: '#1C1C1C',
+  surfaceAlt: '#221A2E',
+  text: '#F4F4F4',
+  muted: '#B4B4B4',
+  border: '#3A3A3A',
+  inputBorder: '#8A8A8A',
+  primary: '#B47CFF',
+  accent: '#45C4FC',
+  primarySoft: '#2E1F47',
+  accentSoft: '#10303F',
+  onPrimary: '#141414',
+  secondary: '#C9A3FF',
+  secondarySoft: '#2A2036',
   warning: '#F0F0F0',
   warningSoft: '#303030',
-  danger: '#FFFFFF',
-  dangerSoft: '#333333',
+  danger: '#FF6B6B',
+  dangerSoft: '#3A1D1D',
 };
 interface ThemeValue {
   colors: ThemeColors;

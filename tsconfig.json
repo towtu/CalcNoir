@@ -6,7 +6,9 @@
   ],
   "exclude": [
     "**/node_modules",
-    "**/Pods"
+    "**/Pods",
+    "web",
+    "vite.config.ts"
   ],
   "compilerOptions": {
     "strict": true,

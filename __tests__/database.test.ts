@@ -22,7 +22,7 @@ jest.mock(
 const KEY = 'almost-exact.notebook.v1';
 const EMPTY = JSON.stringify({ version: 1, entries: [] });
 const FAILURE =
-  'Your notebook database is unavailable. Please restart CalcNoir and try again.';
+  'Your notebook database is unavailable. Please restart Numelix and try again.';
 function envelope(id = 'legacy-page') {
   return JSON.stringify(
     {

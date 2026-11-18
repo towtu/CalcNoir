@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Animated, Easing, StyleSheet, View } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Defs, LinearGradient, Path, Stop } from 'react-native-svg';
 import { liquidFrame, motionFrame } from './liquidGeometry';
 import type { LiquidFrame } from './liquidGeometry';
 
@@ -124,9 +124,19 @@ export function LiquidTabSurface({
         width={width}
         height={height}
       >
+        {/* The bar carries the brand sweep in both appearances. A dark-mode
+            surface colour here left it invisible against the background. Both
+            stops clear 4.5:1 against the white tab labels. */}
+        <Defs>
+          <LinearGradient id="numelixTabBar" x1="0" y1="0" x2="1" y2="1">
+            <Stop offset="0" stopColor={barColor} />
+            <Stop offset="0.5" stopColor="#7C3AED" />
+            <Stop offset="1" stopColor="#4F2BC9" />
+          </LinearGradient>
+        </Defs>
         <AnimatedPath
           testID="liquid-tab-outline"
-          fill={barColor}
+          fill="url(#numelixTabBar)"
           d={motion.progress.interpolate({
             inputRange: range,
             outputRange: [motion.from.path, motion.middle.path, motion.to.path],

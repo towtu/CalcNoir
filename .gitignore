@@ -80,3 +80,6 @@ yarn-error.log*
 # Python verification tooling
 __pycache__/
 *.py[cod]
+
+# Claude Code local tooling
+.claude/

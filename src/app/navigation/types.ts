@@ -1,10 +1,15 @@
 import type { NavigatorScreenParams } from '@react-navigation/native';
 import type { Calculation, Problem, MethodId } from '../../core/numerics/types';
+/**
+ * Four primary destinations. Settings is deliberately absent: it is a
+ * secondary screen reached from the header shortcut on each primary tab, so it
+ * lives on the stack instead.
+ */
 export type RootTabs = {
-  Methods: undefined;
-  Notebook: undefined;
+  Home: undefined;
+  Solve: undefined;
   Learn: undefined;
-  Settings: undefined;
+  Notebook: undefined;
 };
 export type SavedEditorParams = {
   entryId?: string;
@@ -22,6 +27,7 @@ export type RootStack = {
   SavedPage: { entryId: string };
   SavedEditor: SavedEditorParams;
   SavedMethod: { editor: SavedEditorParams };
-  GettingStarted: undefined;
-  Practice: undefined;
+  Lesson: { method: MethodId };
+  Practice: { method?: MethodId } | undefined;
+  Settings: undefined;
 };

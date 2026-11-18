@@ -1,7 +1,7 @@
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { Calculation } from '../../../core/numerics/types';
-import { useTheme } from '../../../shared/theme';
+import { brandFace, tabular, typeScale, useTheme } from '../../../shared/theme';
 import { Body } from '../../../shared/ui';
 import { formatNumber } from '../../../shared/ui/format';
 
@@ -102,9 +102,11 @@ const styles = StyleSheet.create({
     width: 116,
     paddingHorizontal: 12,
     paddingVertical: 12,
+    ...typeScale.numericSmall,
+    ...tabular,
     fontSize: 11,
-    fontVariant: ['tabular-nums'],
+    lineHeight: 16,
   },
-  heading: { fontSize: 10, fontWeight: '600' },
-  selected: { fontWeight: '600' },
+  heading: typeScale.caption,
+  selected: brandFace('inter', 'semibold'),
 });
