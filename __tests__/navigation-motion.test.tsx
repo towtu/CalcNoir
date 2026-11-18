@@ -3,8 +3,14 @@ import TestRenderer, { act } from 'react-test-renderer';
 import { AccessibilityInfo, Text } from 'react-native';
 import { SettingsScreen } from '../src/features/settings/SettingsScreen';
 import { ThemeProvider } from '../src/shared/theme';
-import { Button, Section } from '../src/shared/ui';
 import { useReducedMotion } from '../src/shared/ui/useReducedMotion';
+
+const control = (label: string) =>
+  renderer!.root.findAll(
+    node =>
+      node.props.accessibilityLabel === label &&
+      typeof node.props.onPress === 'function',
+  )[0];
 
 jest.mock('@react-native-async-storage/async-storage', () => ({
   getItem: jest.fn().mockResolvedValue(null),
@@ -128,7 +134,7 @@ test('unmount removes the native subscription while a preference read is pending
   expect(removed).toHaveBeenCalledTimes(1);
 });
 
-test('Settings exposes Replay tutorial in the Help section near the top and invokes its callback', async () => {
+test('Settings exposes Replay tutorial in the Help card near the top and invokes its callback', async () => {
   const onTutorial = jest.fn();
   await act(async () => {
     renderer = TestRenderer.create(
@@ -137,14 +143,15 @@ test('Settings exposes Replay tutorial in the Help section near the top and invo
       </ThemeProvider>,
     );
   });
-  const sections = renderer!.root.findAllByType(Section);
-  const help = sections.findIndex(section => section.props.title === 'Help');
-  expect(help).toBeGreaterThanOrEqual(0);
-  expect(help).toBeLessThanOrEqual(1);
-  const replay = sections[help]
-    .findAllByType(Button)
-    .find(button => button.props.label === 'Replay tutorial')!;
-  expect(replay.props.disabled).toBe(false);
+  // Help stays above the reference cards, so replaying the tutorial is
+  // reachable without scrolling past explanatory text.
+  const output = JSON.stringify(renderer!.toJSON());
+  expect(output).toContain('Help');
+  expect(output.indexOf('Help')).toBeLessThan(
+    output.indexOf('Accuracy & Rounding'),
+  );
+  const replay = control('Replay tutorial');
+  expect(replay.props.accessibilityState.disabled).toBe(false);
   await act(async () => replay.props.onPress());
   expect(onTutorial).toHaveBeenCalledTimes(1);
 });
@@ -157,8 +164,7 @@ test('Settings remains compatible when no tutorial callback is supplied', async 
       </ThemeProvider>,
     );
   });
-  const replay = renderer!.root
-    .findAllByType(Button)
-    .find(button => button.props.label === 'Replay tutorial')!;
-  expect(replay.props.disabled).toBe(true);
+  expect(control('Replay tutorial').props.accessibilityState.disabled).toBe(
+    true,
+  );
 });

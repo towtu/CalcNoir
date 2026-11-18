@@ -1,4 +1,4 @@
-# CalcNoir
+# Numelix
 
 **Numerical methods, clearly.** An offline Android workspace for six numerical methods, with editable equations and data, real calculation steps, and graphs linked to the selected step.
 
@@ -17,7 +17,8 @@ This extends the existing native toolchain. It produces native Android builds wi
 - Interactive sampled graphs: tap/drag inspection, bounded zoom/reset and explicit step playback.
 - A guided first solve: choose a method, edit values, calculate, and open your real result. Shown on first launch; replay from Settings or Learn.
 - A transactional SQLite notebook on Android with up to 40 named pages: create/view/edit/delete problems, notes, tags, pinning, search and duplication. Existing notebooks remain readable; unknown/corrupt data is preserved read-only.
-- Same-problem comparison, three checked practice exercises, and persisted black-and-white appearance with an animated sun/moon switch.
+- A lesson per method — the idea, how a step works, why you would choose it, where it struggles — each with its own three checked exercises.
+- Same-problem comparison and a persisted appearance with an animated sun/moon switch.
 - A smaller floating tab circle in a moving cutout, short page transitions and system reduced-motion support.
 - Native sharing of readable calculation text and a comma-separated step table.
 
@@ -30,12 +31,13 @@ App.tsx                    Provider composition
 src/app/navigation/        Typed routes and feature wiring
 src/core/methods.ts        Method catalogue and starter problems
 src/core/numerics/         Pure algorithms, validation, steps, plot data, types
-src/features/methods/      Focused six-method landing
-src/features/learn/        Getting started and learning navigation
+src/features/home/         Landing screen: hero, quick tools, method rail
+src/features/methods/      Solve: searchable, grouped method grid
+src/features/learn/        Lesson content, per-method chapters and the guide
 src/features/solver/       Separate editor, answer, steps, graph and table
 src/features/comparison/   Same-problem method comparison
 src/features/notebook/     Saved pages, metadata, search and CRUD
-src/features/practice/     Offline exercises and feedback
+src/features/practice/     Per-method exercises and feedback
 src/features/settings/     Appearance and capability information
 src/shared/ui/             Native reusable controls and number/report formatting
 src/shared/theme/          Semantic light/dark tokens
@@ -52,9 +54,44 @@ Keep feature-specific components beside their screen. Put a component in `shared
 
 For a new method, first define its input/output contract and numerical tests, implement it in the core, register its metadata/presets, then add only the editor or graph behavior it requires. See [architecture](docs/architecture.md).
 
+## Browser preview
+
+A react-native-web + Vite harness for looking at and clicking through the UI without an Android SDK, emulator or JDK. It is for design review only; the packaged app is still the Android build above.
+
+```bash
+npm run web
+```
+
+Then open <http://127.0.0.1:5173>. Use the browser's device toolbar at a phone width — the layout is built for one.
+
+It renders `App.tsx` and everything in `src/` unmodified, so screens, navigation, theming and the calculation engine are the real code. The harness lives in `web/` plus `vite.config.ts`, and nothing under `android/`, `ios/`, `scripts/`, `metro.config.js` or `index.js` takes part in it.
+
+Three substitutions make it run:
+
+- `react-native` resolves to `web/react-native.ts`, which re-exports react-native-web and adds the `TurboModuleRegistry` it lacks.
+- `src/native/specs/NativeNotebookDatabase.web.ts` stands in for the Android SQLite TurboModule. `Platform.OS` is `web`, so the notebook falls through to the AsyncStorage driver and persists in `localStorage`.
+- `require('…png')` asset calls are rewritten to ESM imports by a small plugin in `vite.config.ts`.
+
+Known differences from a device: no SQLite notebook (localStorage instead), no native share sheet, no hardware Back, and react-native-screens logs harmless React DOM attribute warnings. Verify anything that depends on those on a real device. `npm run typecheck:web` typechecks the harness; `npm run check` is unchanged and does not cover it.
+
+### Brand fonts are not bundled yet
+
+The type tokens reference Poppins, Inter, JetBrains Mono and STIX Two Text. The browser preview loads all four from Google Fonts, so the preview shows the real brand type today. **The Android build does not have them yet** — React Native falls back to the system sans, so the app still runs, but it renders in Roboto rather than the brand faces.
+
+To finish it, drop these sixteen files into `android/app/src/main/assets/fonts/` (the family name React Native resolves is the file name, which is why the tokens use `Poppins-Medium` rather than a weight):
+
+```text
+Poppins-Regular.ttf        Poppins-Medium.ttf        Poppins-SemiBold.ttf        Poppins-Bold.ttf
+Inter-Regular.ttf          Inter-Medium.ttf          Inter-SemiBold.ttf          Inter-Bold.ttf
+JetBrainsMono-Regular.ttf  JetBrainsMono-Medium.ttf  JetBrainsMono-SemiBold.ttf  JetBrainsMono-Bold.ttf
+STIXTwoText-Regular.ttf    STIXTwoText-Medium.ttf    STIXTwoText-SemiBold.ttf    STIXTwoText-Bold.ttf
+```
+
+All four are SIL Open Font License, so they can ship with the app. Being bundled keeps the offline guarantee intact: the shipped app makes no font request.
+
 ## Development and checks
 
-The source folder is `calcnoir`. The app display name is CalcNoir. Existing Android IDs and local storage keys are retained so installed notebooks survive the rebrand. Run npm commands inside `calcnoir`, where `package.json` lives.
+The source folder is still `calcnoir` and the Android application ID is still `com.towtu.almostexact`. The app display name is Numelix. Existing Android IDs, the `CalcNoirNotebookDatabase` TurboModule name, the AppRegistry key and all local storage keys are retained so installed notebooks survive the rebrand. Run npm commands inside `calcnoir`, where `package.json` lives.
 
 Use Node 22.13+ (Node 22), 24.3+ (Node 24), or Node 26+, JDK 17, and the Android SDK/NDK versions in `android/build.gradle`.
 

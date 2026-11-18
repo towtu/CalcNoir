@@ -1,4 +1,7 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
+import { methodInfo } from '../../core/methods';
+import type { MethodId } from '../../core/numerics/types';
+import { allQuestions, lessonFor } from '../learn/lessons';
 import {
   Body,
   Button,
@@ -8,49 +11,40 @@ import {
   Screen,
   Section,
 } from '../../shared/ui';
-const exercises = [
-  {
-    method: 'Bisection',
-    title: 'Find the first midpoint.',
-    question: 'For f(x) = x³ − x − 2 on [1, 2], what is c = (a + b) / 2?',
-    answer: 1.5,
-    hint: 'Add 1 and 2, then divide by 2.',
-    explanation:
-      '(1 + 2) / 2 = 1.5. Next, evaluate f(1.5) to choose which half to keep.',
-  },
-  {
-    method: 'Interpolation',
-    title: 'Recognize the pattern.',
-    question:
-      'The points (0, 1), (1, 3), and (2, 5) lie on a line. What is P(1.5)?',
-    answer: 4,
-    hint: 'The value increases by 2 each time x increases by 1.',
-    explanation: 'The polynomial is P(x) = 2x + 1, so P(1.5) = 4.',
-  },
-  {
-    method: 'Fixed-Point',
-    title: 'Make one substitution.',
-    question: 'With g(x) = cos(x) and x₀ = 0 radians, what is x₁?',
-    answer: 1,
-    hint: 'Use x₁ = g(x₀). Cosine of zero is 1.',
-    explanation:
-      'x₁ = cos(0) = 1. The result becomes the next input; it is not the final fixed point yet.',
-  },
-];
-export function PracticeScreen() {
-  const [index, setIndex] = useState(0),
-    [answer, setAnswer] = useState(''),
-    [feedback, setFeedback] = useState<string | null>(null),
-    [correct, setCorrect] = useState(false),
-    [hint, setHint] = useState(false);
-  const exercise = exercises[index];
+
+/**
+ * Practice for one method at a time.
+ *
+ * Questions belong to their lesson rather than to a single shared pile, so
+ * finishing a lesson leads straight into drilling that method. Passing no
+ * method keeps the old behaviour — every question, in method order — for the
+ * general practice entry on Learn.
+ */
+export function PracticeScreen({ method }: { method?: MethodId } = {}) {
+  const questions = useMemo(
+    () =>
+      method
+        ? lessonFor(method).quiz.map(question => ({ ...question, method }))
+        : allQuestions(),
+    [method],
+  );
+
+  const [index, setIndex] = useState(0);
+  const [answer, setAnswer] = useState('');
+  const [feedback, setFeedback] = useState<string | null>(null);
+  const [correct, setCorrect] = useState(false);
+  const [hint, setHint] = useState(false);
+
+  const exercise = questions[index];
+
   const check = () => {
     if (!answer.trim() || !Number.isFinite(Number(answer))) {
       setCorrect(false);
       setFeedback('Enter a finite number first.');
       return;
     }
-    const good = Math.abs(Number(answer) - exercise.answer) < 1e-6;
+    const good =
+      Math.abs(Number(answer) - exercise.answer) < (exercise.tolerance ?? 1e-6);
     setCorrect(good);
     setFeedback(
       good
@@ -58,22 +52,28 @@ export function PracticeScreen() {
         : 'Try again. Think through the substitution one operation at a time.',
     );
   };
+
   return (
     <Screen>
       <Heading
         title="Your turn."
-        subtitle="A little practice makes the steps stick."
+        subtitle={
+          method
+            ? `${methodInfo(method).title} · a little practice makes the steps stick.`
+            : 'A little practice makes the steps stick.'
+        }
       />
       <Notice
-        message={`${exercise.method} · Exercise ${index + 1} of ${
-          exercises.length
-        }`}
+        message={`${methodInfo(exercise.method).title} · Exercise ${
+          index + 1
+        } of ${questions.length}`}
       />
-      <Section title={exercise.title}>
+      <Section title={exercise.prompt}>
         <Body>{exercise.question}</Body>
         <Field
           label="Your answer"
           numeric
+          mono
           value={answer}
           onChangeText={value => {
             setAnswer(value);
@@ -98,7 +98,7 @@ export function PracticeScreen() {
         label="Next exercise"
         tone="secondary"
         onPress={() => {
-          setIndex((index + 1) % exercises.length);
+          setIndex((index + 1) % questions.length);
           setAnswer('');
           setFeedback(null);
           setHint(false);

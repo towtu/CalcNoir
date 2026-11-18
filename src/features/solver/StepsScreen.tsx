@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import type { Calculation } from '../../core/numerics/types';
 import { Body, Button, Disclosure, Heading, Screen } from '../../shared/ui';
-import { useTheme } from '../../shared/theme';
+import { tabular, typeScale, useTheme } from '../../shared/theme';
 import { formatNumber } from '../../shared/ui/format';
 import { stepValue } from './stepValue';
 import { ExplanationModal } from './components/ExplanationModal';
@@ -136,14 +136,9 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  number: {
-    fontSize: 28,
-    lineHeight: 36,
-    fontWeight: '600',
-    fontVariant: ['tabular-nums'],
-  },
-  cellValue: { fontSize: 15 },
-  formula: { fontSize: 20, lineHeight: 32, fontWeight: '500' },
+  number: { ...typeScale.value, ...tabular, lineHeight: 36 },
+  cellValue: { ...typeScale.numericSmall, ...tabular },
+  formula: { ...typeScale.math, lineHeight: 30 },
   controls: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   grow: { flex: 1, minWidth: 130 },
   row: {

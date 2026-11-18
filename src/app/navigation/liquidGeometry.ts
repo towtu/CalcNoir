@@ -16,7 +16,7 @@ export function liquidFrame(
   spread = 0,
   lift = 0,
 ): LiquidFrame {
-  const radius = 14;
+  const radius = 24;
   const top = 24;
   const half = Math.min(39 + spread, center - radius, width - radius - center);
   const bowl = Math.min(26 + spread * 0.25, half - 6);

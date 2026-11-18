@@ -17,7 +17,7 @@ import type {
   CurvePoint,
   Point,
 } from '../../../core/numerics/types';
-import { useTheme } from '../../../shared/theme';
+import { tabular, typeScale, useTheme } from '../../../shared/theme';
 import { Button } from '../../../shared/ui';
 import { formatNumber } from '../../../shared/ui/format';
 
@@ -499,8 +499,8 @@ export function CalculationGraph({
 const styles = StyleSheet.create({
   container: { gap: 10 },
   controls: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  readout: { fontSize: 14, lineHeight: 20, fontVariant: ['tabular-nums'] },
+  readout: { ...typeScale.numericSmall, ...tabular },
   legend: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
-  legendText: { fontSize: 12, lineHeight: 18, fontWeight: '500' },
-  note: { fontSize: 12, lineHeight: 18 },
+  legendText: typeScale.caption,
+  note: typeScale.caption,
 });

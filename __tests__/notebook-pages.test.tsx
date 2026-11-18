@@ -105,7 +105,7 @@ test('notebook opens a saved page by id and creates through the methods flow', a
     screen.control('Open Square root homework').props.onPress(),
   );
   expect(onOpen).toHaveBeenCalledWith('first');
-  await act(async () => screen.button('New problem').props.onPress());
+  await act(async () => screen.control('New problem').props.onPress());
   expect(onCreate).toHaveBeenCalledTimes(1);
   expect(screen.button('Delete page')).toBeUndefined();
   await act(async () => screen.renderer.unmount());

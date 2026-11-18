@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Share, StyleSheet, Text, View } from 'react-native';
+import { Share, StyleSheet, Text } from 'react-native';
 import type { Calculation } from '../../core/numerics/types';
 import { methodInfo } from '../../core/methods';
 import {
@@ -10,9 +10,10 @@ import {
   Heading,
   Notice,
   Screen,
+  Section,
 } from '../../shared/ui';
 import { calculationReport, formatNumber } from '../../shared/ui/format';
-import { useTheme } from '../../shared/theme';
+import { tabular, typeScale, useTheme } from '../../shared/theme';
 
 export interface ResultScreenProps {
   calculation: Calculation;
@@ -56,7 +57,7 @@ export function ResultScreen({
     setError('');
     try {
       await Share.share({
-        title: 'CalcNoir calculation',
+        title: 'Numelix calculation',
         message: calculationReport(calculation),
       });
     } catch {
@@ -73,7 +74,7 @@ export function ResultScreen({
         title={failed ? 'Calculation stopped' : 'Your answer'}
         subtitle={methodInfo(calculation.problem.method).title}
       />
-      <View style={[styles.answer, { borderBottomColor: colors.border }]}>
+      <Section>
         <Text
           accessibilityLiveRegion="polite"
           selectable
@@ -100,7 +101,7 @@ export function ResultScreen({
             {formatNumber(calculation.residual, calculation.problem.precision)}
           </Body>
         ) : null}
-      </View>
+      </Section>
       <Notice
         message={calculation.message}
         tone={failed ? 'warning' : 'info'}
@@ -165,16 +166,5 @@ export function ResultScreen({
   );
 }
 const styles = StyleSheet.create({
-  answer: {
-    gap: 12,
-    paddingVertical: 16,
-    paddingBottom: 24,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  value: {
-    fontSize: 34,
-    lineHeight: 44,
-    fontWeight: '600',
-    fontVariant: ['tabular-nums'],
-  },
+  value: { ...typeScale.display, ...tabular, lineHeight: 44 },
 });

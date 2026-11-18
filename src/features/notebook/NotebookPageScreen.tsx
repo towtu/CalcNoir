@@ -3,7 +3,7 @@ import { Alert, StyleSheet, Text, View } from 'react-native';
 import type { Problem } from '../../core/numerics/types';
 import { useNotebook } from '../../shared/storage';
 import { NotebookWriteError } from '../../shared/storage/notebook';
-import { useTheme } from '../../shared/theme';
+import { typeScale, useTheme } from '../../shared/theme';
 import {
   Body,
   Button,
@@ -135,7 +135,7 @@ export function NotebookPageScreen({
                 accessibilityLabel={`${
                   entry.pinned ? 'Unpin' : 'Pin'
                 } ${pageTitle(entry)}`}
-                tone="quiet"
+                tone="accent"
                 disabled={readOnly || busy !== null}
                 busy={busy === 'pin'}
                 onPress={() =>
@@ -229,8 +229,7 @@ const styles = StyleSheet.create({
   action: { flex: 1, minWidth: 120 },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   tag: {
-    fontSize: 12,
-    lineHeight: 18,
+    ...typeScale.caption,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,

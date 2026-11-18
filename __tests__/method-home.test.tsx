@@ -8,7 +8,7 @@ import { METHODS } from '../src/core/methods';
 import { MethodsScreen } from '../src/features/methods/MethodsScreen';
 import { SettingsScreen } from '../src/features/settings/SettingsScreen';
 import { ThemeProvider } from '../src/shared/theme';
-import { Brand, Button } from '../src/shared/ui';
+import { Brand } from '../src/shared/ui';
 
 jest.mock('@react-native-async-storage/async-storage', () => ({
   getItem: jest.fn().mockResolvedValue(null),
@@ -43,10 +43,10 @@ afterEach(async () => {
 
 test('the compact home exposes all six methods with short input hints and exact method callbacks', async () => {
   const onChoose = jest.fn();
-  await render(<MethodsScreen onChoose={onChoose} />);
+  await render(<MethodsScreen onChoose={onChoose} onSettings={jest.fn()} />);
   expect(renderer.root.findByType(Brand).props.compact).toBe(true);
   const text = JSON.stringify(renderer.toJSON());
-  expect(text).toContain('Root finding');
+  expect(text).toContain('Root Finding');
   expect(text).toContain('Interpolation');
   expect(text).not.toContain('Numerical methods, clearly.');
   expect(text).not.toContain('Start with the method your problem needs.');
@@ -127,9 +127,11 @@ test('appearance uses sun and moon cues with an accessible persisted switch', as
     'almost-exact.theme.v1',
     'dark',
   );
-  const replay = renderer.root
-    .findAllByType(Button)
-    .find(button => button.props.label === 'Replay tutorial')!;
+  const replay = renderer.root.findAll(
+    node =>
+      node.props.accessibilityLabel === 'Replay tutorial' &&
+      typeof node.props.onPress === 'function',
+  )[0];
   await act(async () => replay.props.onPress());
   expect(onTutorial).toHaveBeenCalledTimes(1);
 });

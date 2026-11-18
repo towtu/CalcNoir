@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -15,10 +15,12 @@ import {
   useNavigation,
 } from '@react-navigation/native';
 import Svg, { Path } from 'react-native-svg';
+import { ICONS } from '../../shared/assets/icons';
+import { MeshBackground } from '../../shared/ui/MeshBackground';
 import { RaisedTabBar } from './RaisedTabBar';
 import { defaultProblem, methodInfo } from '../../core/methods';
 import { calculate } from '../../core/numerics';
-import type { Calculation } from '../../core/numerics/types';
+import { HomeScreen } from '../../features/home/HomeScreen';
 import { MethodsScreen } from '../../features/methods/MethodsScreen';
 import { SolverScreen } from '../../features/solver';
 import { ResultScreen } from '../../features/solver/ResultScreen';
@@ -31,53 +33,53 @@ import {
   NotebookPageScreen,
   NotebookEditorScreen,
 } from '../../features/notebook';
-import { GettingStartedScreen } from '../../features/learn/GettingStartedScreen';
 import { LearnScreen } from '../../features/learn/LearnScreen';
-import { useGettingStarted } from '../../features/learn/useGettingStarted';
+import { LessonScreen } from '../../features/learn/LessonScreen';
+import { IntroAnimation } from '../../features/intro/IntroAnimation';
+import { NavigationTour } from '../../features/intro/NavigationTour';
+import { useTour } from '../../features/intro/useTour';
 import { PracticeScreen } from '../../features/practice/PracticeScreen';
 import { SettingsScreen } from '../../features/settings/SettingsScreen';
 import { useNotebook } from '../../shared/storage';
-import { useTheme } from '../../shared/theme';
+import {
+  headerTitle,
+  minTouch,
+  radius,
+  space,
+  useTheme,
+} from '../../shared/theme';
 import { useReducedMotion } from '../../shared/ui/useReducedMotion';
-import { Brand, Body, Screen } from '../../shared/ui';
 import type { RootStack, RootTabs } from './types';
 
 const Tab = createBottomTabNavigator<RootTabs>();
 const Stack = createNativeStackNavigator<RootStack>();
 const icons: Record<keyof RootTabs, string> = {
-  Methods: 'M3 18C7 18 8 5 12 5S17 18 21 18M3 21H21M4 3V21',
-  Notebook: 'M5 3H20V21H5ZM8 3V21M11 8H17M11 12H17',
-  Learn: 'M3 4H10L12 6L14 4H21V20H14L12 22L10 20H3ZM12 6V22',
-  Settings: 'M4 6H20M4 12H20M4 18H20M8 3V9M16 9V15M10 15V21',
+  Home: ICONS.home,
+  Solve: ICONS.calculator,
+  Learn: ICONS.graduationCap,
+  Notebook: ICONS.journal,
 };
 function TabIcon({ name, color }: { name: keyof RootTabs; color: string }) {
   return (
     <>
       <Svg width={22} height={22} viewBox="0 0 24 24" accessible={false}>
-        <Path
-          d={icons[name]}
-          stroke={color}
-          strokeWidth={1.7}
-          fill="none"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
+        <Path d={icons[name]} fill={color} fillRule="evenodd" />
       </Svg>
     </>
   );
 }
 const tabIcons = {
-  Methods: ({ color }: { color: string }) => (
-    <TabIcon name="Methods" color={color} />
+  Home: ({ color }: { color: string }) => (
+    <TabIcon name="Home" color={color} />
   ),
-  Notebook: ({ color }: { color: string }) => (
-    <TabIcon name="Notebook" color={color} />
+  Solve: ({ color }: { color: string }) => (
+    <TabIcon name="Solve" color={color} />
   ),
   Learn: ({ color }: { color: string }) => (
     <TabIcon name="Learn" color={color} />
   ),
-  Settings: ({ color }: { color: string }) => (
-    <TabIcon name="Settings" color={color} />
+  Notebook: ({ color }: { color: string }) => (
+    <TabIcon name="Notebook" color={color} />
   ),
 };
 function renderTabBar(props: BottomTabBarProps) {
@@ -102,13 +104,33 @@ function MainTabs({
         tabBarIcon: tabIcons[route.name],
       })}
     >
-      <Tab.Screen name="Methods">
+      <Tab.Screen name="Home">
+        {({ navigation: tabs }) => (
+          <HomeScreen
+            warning={warning}
+            onSolve={() => tabs.navigate('Solve')}
+            onLearn={() => tabs.navigate('Learn')}
+            onNotebook={() => tabs.navigate('Notebook')}
+            onOpenSaved={entryId => navigation.push('SavedPage', { entryId })}
+            onSettings={() => navigation.push('Settings')}
+          />
+        )}
+      </Tab.Screen>
+      <Tab.Screen name="Solve">
         {() => (
           <MethodsScreen
-            warning={warning}
             onChoose={method =>
               navigation.push('Problem', { problem: defaultProblem(method) })
             }
+            onSettings={() => navigation.push('Settings')}
+          />
+        )}
+      </Tab.Screen>
+      <Tab.Screen name="Learn">
+        {() => (
+          <LearnScreen
+            onLesson={method => navigation.push('Lesson', { method })}
+            onSettings={() => navigation.push('Settings')}
           />
         )}
       </Tab.Screen>
@@ -116,27 +138,32 @@ function MainTabs({
         {({ navigation: tabs }) => (
           <NotebookScreen
             onOpen={entryId => navigation.push('SavedPage', { entryId })}
-            onCreate={() => tabs.navigate('Methods')}
-          />
-        )}
-      </Tab.Screen>
-      <Tab.Screen name="Learn">
-        {() => (
-          <LearnScreen
-            onGuide={() => navigation.push('GettingStarted')}
-            onPractice={() => navigation.push('Practice')}
-          />
-        )}
-      </Tab.Screen>
-      <Tab.Screen name="Settings">
-        {() => (
-          <SettingsScreen
-            onTutorial={() => navigation.push('GettingStarted')}
+            onCreate={() => tabs.navigate('Solve')}
+            onSettings={() => navigation.push('Settings')}
           />
         )}
       </Tab.Screen>
     </Tab.Navigator>
   );
+}
+function LessonRoute({
+  route,
+  navigation,
+}: NativeStackScreenProps<RootStack, 'Lesson'>) {
+  return (
+    <LessonScreen
+      method={route.params.method}
+      onPractice={method => navigation.push('Practice', { method })}
+      onSolve={method =>
+        navigation.push('Problem', { problem: defaultProblem(method) })
+      }
+    />
+  );
+}
+function PracticeRoute({
+  route,
+}: NativeStackScreenProps<RootStack, 'Practice'>) {
+  return <PracticeScreen method={route.params?.method} />;
 }
 function ProblemRoute({
   route,
@@ -278,16 +305,6 @@ function SavedMethodRoute({
     />
   );
 }
-function GuideRoute({
-  navigation,
-}: NativeStackScreenProps<RootStack, 'GettingStarted'>) {
-  return (
-    <GettingStartedScreen
-      onSkip={() => navigation.goBack()}
-      onComplete={calculation => navigation.replace('Result', { calculation })}
-    />
-  );
-}
 function BackButton({ onPress }: { onPress: () => void }) {
   const { colors } = useTheme();
   return (
@@ -297,7 +314,45 @@ function BackButton({ onPress }: { onPress: () => void }) {
       onPress={onPress}
       style={styles.back}
     >
-      <Text style={[styles.backText, { color: colors.text }]}>‹ Back</Text>
+      <Svg width={22} height={22} viewBox="0 0 24 24" accessible={false}>
+        <Path
+          d="M14.7 4.3a1.1 1.1 0 0 1 0 1.56L8.56 12l6.14 6.14a1.1 1.1 0 1 1-1.56 1.56l-6.92-6.92a1.1 1.1 0 0 1 0-1.56l6.92-6.92a1.1 1.1 0 0 1 1.56 0Z"
+          fill={colors.text}
+        />
+      </Svg>
+    </Pressable>
+  );
+}
+/**
+ * The way out of a deep stack.
+ *
+ * Solve a problem, open its steps, open the graph from a step, compare the
+ * methods: four screens, and the only way back to a tab was four taps on Back.
+ * This pops the whole stack in one, so no screen is ever more than one tap
+ * from the app's root. It is hidden on `Main` itself, where there is nothing
+ * to pop and the Home tab is already in the bar.
+ */
+function HeaderHomeControl() {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStack>>();
+  const { colors } = useTheme();
+  if (!navigation.canGoBack()) return null;
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="Back to home"
+      onPress={() => navigation.popTo('Main', { screen: 'Home' })}
+      style={({ pressed }) => [styles.home, { opacity: pressed ? 0.7 : 1 }]}
+    >
+      <View
+        style={[
+          styles.homeCircle,
+          { backgroundColor: colors.surface, borderColor: colors.border },
+        ]}
+      >
+        <Svg width={18} height={18} viewBox="0 0 24 24" accessible={false}>
+          <Path d={ICONS.home} fill={colors.text} fillRule="evenodd" />
+        </Svg>
+      </View>
     </Pressable>
   );
 }
@@ -310,16 +365,28 @@ function HeaderBackControl() {
 export function RootNavigator() {
   const { colors, isDark } = useTheme();
   const reducedMotion = useReducedMotion();
-  const onboarding = useGettingStarted();
+  const tour = useTour();
   const navigationRef = useNavigationContainerRef<RootStack>();
-  const [pendingCalculation, setPendingCalculation] =
-    useState<Calculation | null>(null);
+  /**
+   * The opening plays over the app rather than in front of it, so the
+   * navigator mounts and lays out while the curtain is still down. The tour
+   * waits for the curtain to lift — it points at a tab bar that has to be
+   * on screen to be pointed at.
+   */
+  const [introDone, setIntroDone] = useState(false);
+  const finishIntro = useCallback(() => setIntroDone(true), []);
+  const focusTab = useCallback(
+    (tab: keyof RootTabs) => {
+      if (navigationRef.isReady()) navigationRef.navigate('Main', { screen: tab });
+    },
+    [navigationRef],
+  );
   const base = isDark ? DarkTheme : DefaultTheme;
   const theme = {
     ...base,
     colors: {
       ...base.colors,
-      background: colors.background,
+      background: 'transparent',
       card: colors.surface,
       text: colors.text,
       border: colors.border,
@@ -327,50 +394,26 @@ export function RootNavigator() {
       notification: colors.accent,
     },
   };
-  if (onboarding.loading)
-    return (
-      <Screen>
-        <Brand />
-        <Body muted>Opening CalcNoir…</Body>
-      </Screen>
-    );
-  if (onboarding.needed)
-    return (
-      <GettingStartedScreen
-        warning={onboarding.warning}
-        onSkip={onboarding.finish}
-        onComplete={calculation => {
-          setPendingCalculation(calculation);
-          onboarding.finish();
-        }}
-      />
-    );
   return (
-    <NavigationContainer
-      ref={navigationRef}
-      theme={theme}
-      onReady={() => {
-        if (pendingCalculation) {
-          navigationRef.navigate('Result', { calculation: pendingCalculation });
-          setPendingCalculation(null);
-        }
-      }}
-    >
+    <View style={[styles.root, { backgroundColor: colors.background }]}>
+      <MeshBackground />
+      <NavigationContainer ref={navigationRef} theme={theme}>
       <Stack.Navigator
         screenOptions={() => ({
-          headerStyle: { backgroundColor: colors.background },
+          headerStyle: { backgroundColor: 'transparent' },
           headerTintColor: colors.text,
-          headerTitleStyle: { fontSize: 17, fontWeight: '600' },
+          headerTitleStyle: headerTitle,
           headerShadowVisible: false,
-          contentStyle: { backgroundColor: colors.background },
+          contentStyle: { backgroundColor: 'transparent' },
           headerBackVisible: false,
           animation: reducedMotion ? 'none' : 'slide_from_right',
           animationDuration: 220,
           headerLeft: HeaderBackControl,
+          headerRight: HeaderHomeControl,
         })}
       >
         <Stack.Screen name="Main" options={{ headerShown: false }}>
-          {props => <MainTabs {...props} warning={onboarding.warning} />}
+          {props => <MainTabs {...props} warning={tour.warning} />}
         </Stack.Screen>
         <Stack.Screen
           name="Problem"
@@ -410,7 +453,7 @@ export function RootNavigator() {
         <Stack.Screen
           name="SavedPage"
           component={SavedPageRoute}
-          options={{ title: 'Notebook page' }}
+          options={{ title: 'Notebook' }}
         />
         <Stack.Screen
           name="SavedEditor"
@@ -426,29 +469,75 @@ export function RootNavigator() {
           options={{ title: 'Change method' }}
         />
         <Stack.Screen
-          name="GettingStarted"
-          component={GuideRoute}
-          options={{
-            title: 'Getting started',
-            headerShown: false,
-            animation: reducedMotion ? 'none' : 'fade',
-          }}
+          name="Lesson"
+          component={LessonRoute}
+          options={({ route }) => ({
+            title: methodInfo(route.params.method).title,
+          })}
         />
         <Stack.Screen
           name="Practice"
-          component={PracticeScreen}
+          component={PracticeRoute}
           options={{ title: 'Practice' }}
         />
-      </Stack.Navigator>
-    </NavigationContainer>
+        <Stack.Screen name="Settings" options={{ title: 'Settings' }}>
+          {({ navigation }) => (
+            <SettingsScreen
+              /**
+               * Back to the tabs first: the tour points at the tab bar and the
+               * header shortcut, and neither is on screen while Settings is
+               * pushed over them.
+               */
+              onTutorial={() => {
+                navigation.popTo('Main', { screen: 'Home' });
+                tour.replay();
+              }}
+            />
+          )}
+        </Stack.Screen>
+        </Stack.Navigator>
+      </NavigationContainer>
+      {introDone ? null : <IntroAnimation onDone={finishIntro} />}
+      {introDone && !tour.loading && tour.needed ? (
+        <NavigationTour
+          warning={tour.warning}
+          onFocusTab={focusTab}
+          onDone={tour.finish}
+        />
+      ) : null}
+    </View>
   );
 }
 const styles = StyleSheet.create({
-  backText: { fontSize: 16 },
+  root: { flex: 1 },
+  /**
+   * The header's own left and right containers sit flush against the screen
+   * edge, so both controls carry the content inset themselves. A `minTouch`
+   * box inset by `space.edge` puts each glyph in the same column as the
+   * settings shortcut on the four tab screens: nothing jumps sideways when a
+   * screen is pushed.
+   */
   back: {
-    minHeight: 48,
-    minWidth: 64,
+    minHeight: minTouch,
+    width: minTouch,
+    alignItems: 'center',
     justifyContent: 'center',
-    paddingRight: 12,
+    marginStart: space.edge,
+  },
+  /** The touch target stays 48; only the drawn circle inside it is smaller. */
+  home: {
+    height: minTouch,
+    width: minTouch,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginEnd: space.edge,
+  },
+  homeCircle: {
+    height: 40,
+    width: 40,
+    borderRadius: radius.pill,
+    borderWidth: StyleSheet.hairlineWidth,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

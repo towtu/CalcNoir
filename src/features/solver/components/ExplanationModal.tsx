@@ -6,7 +6,7 @@ import type {
   CalculationStep,
 } from '../../../core/numerics/types';
 import { methodInfo } from '../../../core/methods';
-import { useTheme } from '../../../shared/theme';
+import { tabular, typeScale, useTheme } from '../../../shared/theme';
 import { Body, Button, Heading, Notice, Section } from '../../../shared/ui';
 import { formatNumber } from '../../../shared/ui/format';
 
@@ -96,7 +96,7 @@ export function ExplanationModal({
 const styles = StyleSheet.create({
   fill: { flex: 1 },
   content: { padding: 20, gap: 18, paddingBottom: 32 },
-  formula: { fontSize: 16, lineHeight: 26, fontWeight: '500' },
+  formula: typeScale.math,
   valueRow: {
     minHeight: 42,
     flexDirection: 'row',
@@ -107,6 +107,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     paddingVertical: 8,
   },
-  label: { fontSize: 12 },
-  value: { fontSize: 14, fontVariant: ['tabular-nums'] },
+  label: typeScale.caption,
+  value: { ...typeScale.numericSmall, ...tabular },
 });

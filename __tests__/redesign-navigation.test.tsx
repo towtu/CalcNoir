@@ -40,6 +40,14 @@ const button = (label: string) =>
       node =>
         node.props.label === label || node.props.accessibilityLabel === label,
     )!;
+const control = (label: string) =>
+  renderer.root
+    .findAll(
+      node =>
+        node.props.accessibilityLabel === label &&
+        typeof node.props.onPress === 'function',
+    )
+    .at(-1)!;
 const press = async (label: string) => {
   const target = renderer.root
     .findAll(
@@ -57,7 +65,7 @@ async function open(completed = true, notebookRaw: string | null = null) {
     .mockImplementation(async key =>
       key === 'almost-exact.notebook.v1'
         ? notebookRaw
-        : key === 'calcnoir.getting-started.v1' && completed
+        : key === 'numelix.tour.v1' && completed
         ? 'done'
         : null,
     );
@@ -80,21 +88,23 @@ afterEach(async () => {
   jest.restoreAllMocks();
 });
 
-test('first launch offers a short guide with a visible exit and remembers completion', async () => {
+test('first launch opens with the brand animation and a tour with a visible exit', async () => {
   await open(false);
-  expect(output()).toContain('Getting started');
-  expect(button('Skip tutorial')).toBeDefined();
-  await act(async () => button('Skip tutorial').props.onPress());
-  expect(output()).toContain('Choose a method');
+  expect(output()).toContain('Numerical analysis. Made simple.');
+  await press('Skip intro');
+  expect(output()).toContain('1 of 5');
+  expect(button('Skip tour')).toBeDefined();
+  await act(async () => button('Skip tour').props.onPress());
+  expect(output()).not.toContain('1 of 5');
   expect(AsyncStorage.setItem).toHaveBeenCalledWith(
-    'calcnoir.getting-started.v1',
+    'numelix.tour.v1',
     'done',
   );
 });
 
 test('the methods landing does not display an equation editor or numerical process', async () => {
   await open();
-  expect(output()).toContain('CalcNoir');
+  expect(output()).toContain('Numelix');
   expect(output()).toContain('Choose a method');
   expect(output()).not.toContain('Equation or f(x)');
   expect(output()).not.toContain('Step table');
@@ -103,6 +113,7 @@ test('the methods landing does not display an equation editor or numerical proce
 
 test('Lagrange opens its own editor and Calculate opens a separate answer screen', async () => {
   await open();
+  await tab('Solve');
   await press('Open Lagrange');
   expect(output()).toContain('Point 1 x');
   expect(output()).not.toContain('Step table');
@@ -120,6 +131,7 @@ test('Lagrange opens its own editor and Calculate opens a separate answer screen
 
 test('Back from a result preserves the edited equation and advanced settings stay opt-in', async () => {
   await open();
+  await tab('Solve');
   await press('Open Bisection');
   const input = () =>
     renderer.root
@@ -141,15 +153,18 @@ async function tab(label: string) {
   )[0];
   await act(async () => target.props.onPress({ preventDefault: jest.fn() }));
 }
-test('a skipped first-run tutorial remains replayable from Settings', async () => {
+test('a skipped tour remains replayable from Settings', async () => {
   await open(false);
-  await act(async () => button('Skip tutorial').props.onPress());
-  await tab('Settings');
-  expect(button('Replay tutorial')).toBeDefined();
-  await act(async () => button('Replay tutorial').props.onPress());
-  expect(output()).toContain('Getting started');
-  await press('Skip tutorial');
-  expect(output()).toContain('Appearance');
+  await press('Skip intro');
+  await act(async () => button('Skip tour').props.onPress());
+  await press('Settings');
+  expect(control('Replay tutorial')).toBeDefined();
+  await act(async () => control('Replay tutorial').props.onPress());
+  // Replaying returns to the tabs: the tour points at the bar and the header.
+  expect(output()).toContain('1 of 5');
+  expect(output()).not.toContain('Appearance');
+  await press('Skip tour');
+  expect(output()).toContain('Methods tried');
 });
 test('notebook method picker preserves typed title and notes and updates the same page', async () => {
   await open(

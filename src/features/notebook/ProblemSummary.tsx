@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, Text } from 'react-native';
 import { methodInfo } from '../../core/methods';
 import type { Problem } from '../../core/numerics/types';
-import { useTheme } from '../../shared/theme';
+import { tabular, typeScale, useTheme } from '../../shared/theme';
 import { Body, Disclosure, Section } from '../../shared/ui';
 import { problemPreview } from './page';
 
@@ -38,6 +38,6 @@ export function ProblemSummary({ problem }: { problem: Problem }) {
 }
 
 const styles = StyleSheet.create({
-  expression: { fontSize: 18, lineHeight: 26, fontVariant: ['tabular-nums'] },
-  points: { fontSize: 15, lineHeight: 24, fontVariant: ['tabular-nums'] },
+  expression: typeScale.math,
+  points: { ...typeScale.numericSmall, ...tabular },
 });

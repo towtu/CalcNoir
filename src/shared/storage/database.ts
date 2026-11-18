@@ -7,7 +7,7 @@ import type { StorageDriver } from './notebook';
 const KEY = 'almost-exact.notebook.v1';
 const EMPTY = JSON.stringify({ version: 1, entries: [] });
 const FAILURE =
-  'Your notebook database is unavailable. Please restart CalcNoir and try again.';
+  'Your notebook database is unavailable. Please restart Numelix and try again.';
 interface NotebookDatabase {
   readNotebook: () => Promise<string | null>;
   writeNotebook: (raw: string) => Promise<void>;

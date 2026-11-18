@@ -12,7 +12,7 @@ import {
   Section,
 } from '../../shared/ui';
 import { describeExpression, formatNumber } from '../../shared/ui/format';
-import { useTheme } from '../../shared/theme';
+import { space, tabular, typeScale, useTheme } from '../../shared/theme';
 
 interface Comparison {
   method: MethodId;
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 12,
   },
-  value: { fontSize: 25, fontVariant: ['tabular-nums'], fontWeight: '600' },
-  small: { fontSize: 11, lineHeight: 18, marginTop: 5 },
-  status: { fontSize: 11, fontWeight: '600' },
+  value: { ...typeScale.value, ...tabular },
+  small: { ...typeScale.caption, marginTop: space.xs },
+  status: typeScale.caption,
 });

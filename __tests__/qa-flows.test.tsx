@@ -68,6 +68,14 @@ const tab = (label: string) =>
       typeof item.props.onPress === 'function',
   )[0];
 
+const goToSolve = async () => {
+  const target = renderer!.root.findAll(
+    node =>
+      node.props.accessibilityLargeContentTitle === 'Solve' &&
+      typeof node.props.onPress === 'function',
+  )[0];
+  await act(async () => target.props.onPress({ preventDefault: jest.fn() }));
+};
 const control = (label: string, root = renderer!.root) =>
   root
     .findAll(
@@ -90,7 +98,7 @@ beforeEach(() => {
     .mocked(AsyncStorage.getItem)
     .mockReset()
     .mockImplementation(async key =>
-      key === 'calcnoir.getting-started.v1' ? 'done' : null,
+      key === 'numelix.tour.v1' ? 'done' : null,
     );
   jest.mocked(AsyncStorage.setItem).mockReset().mockResolvedValue(undefined);
   jest
@@ -234,7 +242,7 @@ test.each([
       .mockImplementation(async key =>
         key === 'almost-exact.notebook.v1'
           ? raw
-          : key === 'calcnoir.getting-started.v1'
+          : key === 'numelix.tour.v1'
           ? 'done'
           : null,
       );
@@ -248,6 +256,7 @@ test.each([
     await act(async () => {
       renderer = TestRenderer.create(<App />);
     });
+    await goToSolve();
     await act(async () => control('Open Bisection').props.onPress());
     await act(async () => button('Calculate').props.onPress());
     const result = currentResult();
@@ -300,7 +309,7 @@ test('a partially recovered notebook calculates and shares valid entries while m
     .mockImplementation(async key =>
       key === 'almost-exact.notebook.v1'
         ? raw
-        : key === 'calcnoir.getting-started.v1'
+        : key === 'numelix.tour.v1'
         ? 'done'
         : null,
     );
@@ -313,6 +322,7 @@ test('a partially recovered notebook calculates and shares valid entries while m
   await act(async () => {
     renderer = TestRenderer.create(<App />);
   });
+    await goToSolve();
   await act(async () =>
     tab('Notebook').props.onPress({ preventDefault: jest.fn() }),
   );
@@ -447,6 +457,7 @@ test('separate method pages never inherit incomplete fields from another method'
   await act(async () => {
     renderer = TestRenderer.create(<App />);
   });
+    await goToSolve();
   await act(async () => control('Open Bisection').props.onPress());
   await act(async () => field('Bracket start a').props.onChangeText('-'));
   await act(async () => control('Back').props.onPress());
@@ -632,6 +643,7 @@ test('result sharing exports its exact snapshot while returning to input exposes
   await act(async () => {
     renderer = TestRenderer.create(<App />);
   });
+    await goToSolve();
   await act(async () => control('Open Bisection').props.onPress());
   await act(async () => button('Calculate').props.onPress());
   const result = currentResult();
@@ -641,7 +653,7 @@ test('result sharing exports its exact snapshot while returning to input exposes
     button('Share calculation', currentResult()).props.onPress(),
   );
   expect(share).toHaveBeenCalledWith({
-    title: 'CalcNoir calculation',
+    title: 'Numelix calculation',
     message: calculationReport(result.props.calculation),
   });
   await act(async () => control('Back').props.onPress());

@@ -10,8 +10,9 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import { useTheme } from '../../shared/theme';
+import { tabLabel, useTheme } from '../../shared/theme';
 import { LiquidTabSurface } from './LiquidTabSurface';
+import { TAB_BAR_EDGE, TAB_BAR_HEIGHT, tabCenter } from './tabGeometry';
 import { useReducedMotion } from '../../shared/ui/useReducedMotion';
 
 export function RaisedTabBar({
@@ -20,16 +21,18 @@ export function RaisedTabBar({
   navigation,
 }: BottomTabBarProps) {
   const { colors, isDark } = useTheme();
-  const barColor = isDark ? colors.surfaceAlt : colors.primary;
-  const barInk = isDark ? colors.text : colors.onPrimary;
+  // The tab bar carries the brand gradient in both appearances, so its ink is
+  // white either way rather than following the theme.
+  const barColor = '#983FFF';
+  const barInk = '#FFFFFF';
   const circleColor = isDark ? colors.text : colors.onPrimary;
   const circleInk = isDark ? colors.background : colors.text;
   const { fontScale } = useWindowDimensions();
   const shortLabels: Record<string, string> = {
-    Methods: 'Solve',
-    Notebook: 'Notes',
+    Home: 'Home',
+    Solve: 'Solve',
     Learn: 'Learn',
-    Settings: 'Setup',
+    Notebook: 'Notes',
   };
   const insets = useSafeAreaInsets();
   const reducedMotion = useReducedMotion();
@@ -40,8 +43,7 @@ export function RaisedTabBar({
   const [displayedKey, setDisplayedKey] = useState(active.key);
   const displayed =
     state.routes.find(route => route.key === displayedKey) ?? active;
-  const center =
-    12 + ((width - 24) / state.routes.length) * (state.index + 0.5);
+  const center = tabCenter(width, state.routes.length, state.index);
   useEffect(() => {
     const show = Keyboard.addListener('keyboardDidShow', () =>
       setKeyboard(true),
@@ -60,8 +62,7 @@ export function RaisedTabBar({
       const focused = state.index === index;
       const { options } = descriptors[route.key];
       const color = barInk;
-      const tabCenter =
-        12 + ((width - 24) / state.routes.length) * (index + 0.5);
+      const itemCenter = tabCenter(width, state.routes.length, index);
       return (
         <Pressable
           key={route.key}
@@ -96,10 +97,10 @@ export function RaisedTabBar({
                 opacity: location
                   ? location.interpolate({
                       inputRange: [
-                        tabCenter - 46,
-                        tabCenter - 28,
-                        tabCenter + 28,
-                        tabCenter + 46,
+                        itemCenter - 46,
+                        itemCenter - 28,
+                        itemCenter + 28,
+                        itemCenter + 46,
                       ],
                       outputRange: [1, 0, 0, 1],
                       extrapolate: 'clamp',
@@ -128,10 +129,7 @@ export function RaisedTabBar({
     <View
       style={[
         styles.safeArea,
-        {
-          backgroundColor: colors.background,
-          paddingBottom: Math.max(8, insets.bottom),
-        },
+        { paddingBottom: Math.max(8, insets.bottom) },
       ]}
     >
       <View
@@ -174,12 +172,12 @@ export function RaisedTabBar({
   );
 }
 const styles = StyleSheet.create({
-  safeArea: { paddingTop: 8, paddingHorizontal: 16 },
+  safeArea: { paddingTop: 8, paddingHorizontal: TAB_BAR_EDGE },
   bar: { flexDirection: 'row', paddingHorizontal: 12 },
   item: {
     flex: 1,
     minWidth: 48,
-    minHeight: 84,
+    minHeight: TAB_BAR_HEIGHT,
     paddingTop: 22,
     alignItems: 'center',
     paddingHorizontal: 2,
@@ -191,10 +189,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  label: {
-    fontSize: 12,
-    lineHeight: 16,
-    fontWeight: '500',
-    textAlign: 'center',
-  },
+  label: { ...tabLabel, textAlign: 'center' },
 });

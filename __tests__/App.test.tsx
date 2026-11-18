@@ -4,7 +4,7 @@ import React from 'react';
 import TestRenderer, { act } from 'react-test-renderer';
 import { TextInput } from 'react-native';
 import App from '../App';
-import { MethodsScreen } from '../src/features/methods/MethodsScreen';
+import { HomeScreen } from '../src/features/home/HomeScreen';
 import {
   NotebookEditorScreen,
   NotebookPageScreen,
@@ -51,9 +51,14 @@ async function openApp() {
     renderer = TestRenderer.create(<App />);
   });
 }
+async function openSolve() {
+  await act(async () =>
+    tab('Solve').props.onPress({ preventDefault: jest.fn() }),
+  );
+}
 
 beforeEach(() => {
-  stored = new Map([['calcnoir.getting-started.v1', 'done']]);
+  stored = new Map([['numelix.tour.v1', 'done']]);
   jest
     .mocked(AsyncStorage.getItem)
     .mockReset()
@@ -78,21 +83,22 @@ afterEach(async () => {
   }
   jest.restoreAllMocks();
 });
-
-test('native application starts with methods and its four main destinations', async () => {
+test('native application starts on home with its four main destinations', async () => {
   await openApp();
-  expect(current(MethodsScreen)).toBeDefined();
+  expect(current(HomeScreen)).toBeDefined();
   expect(renderer!.root.findAllByType(SolverScreen)).toHaveLength(0);
-  for (const label of ['Methods', 'Notebook', 'Learn', 'Settings']) {
+  for (const label of ['Home', 'Solve', 'Learn', 'Notebook']) {
     expect(tab(label)).toBeDefined();
   }
   expect(JSON.stringify(renderer!.toJSON())).not.toContain('Equation or f(x)');
+  await openSolve();
   await act(async () => control('Open Bisection').props.onPress());
   expect(current(SolverScreen).props.initialProblem.method).toBe('bisection');
 });
 
 test('a calculated page persists, reopens through the notebook and can be themed', async () => {
   await openApp();
+  await openSolve();
   await act(async () => control('Open Bisection').props.onPress());
   await act(async () =>
     button('Calculate', current(SolverScreen)).props.onPress(),
@@ -129,7 +135,7 @@ test('a calculated page persists, reopens through the notebook and can be themed
   await act(async () => control('Back').props.onPress());
   await act(async () => control('Back').props.onPress());
   await act(async () =>
-    tab('Settings').props.onPress({ preventDefault: jest.fn() }),
+    control('Settings').props.onPress(),
   );
   const themeSwitch = current(SettingsScreen).findByType(ThemeToggle);
   await act(async () => themeSwitch.props.onValueChange(true));
